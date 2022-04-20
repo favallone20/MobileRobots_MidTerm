@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="node_start_delay" default="5.0" />
+
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_stage_1.launch" />
+    <node pkg="midTerm_Project" type="ex2.py" name="node_ex2" output="screen" 
+        launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@'"/>
+</launch>

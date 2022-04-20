@@ -6,8 +6,8 @@ import tf
 import rospy
 from geometry_msgs.msg import Twist
 
-rospy.init_node("node_ex1")
-COORDINATES = [(0,0), (0.7,0), (0.7,0.7), (0,0)]  #landmarks coordinates
+rospy.init_node("node_ex2")
+COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
 STANDARD_DEVIATION = 0.05
