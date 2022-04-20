@@ -1,12 +1,15 @@
 #! /usr/bin/python3
 import numpy as np
 from math import acos, asin, pi
-
-
+from nav_msgs.msg import Odometry
+import tf
 import rospy
 from geometry_msgs.msg import Twist
 
-COORDINATES = [(5, 0), (5, -3), (10, -3), (10, 0), (10, 3)]  #landmarks coordinates
+COORDINATES = [(0,0), (0.26,0), (0.5,0), (1,0), (1.5,0)]  #landmarks coordinates
+rate = rospy.Rate(10) #0.1s
+pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
+
 
 def compute_angle(p1,p2):
     a = np.array(p1)
@@ -35,11 +38,33 @@ def compute_angle(p1,p2):
 
 
 
+def get_yaw():
+    odom = rospy.wait_for_message("/odom",Odometry)
+    quaternion = (
+    odom.pose.orientation.x,
+    odom.pose.orientation.y,
+    odom.pose.orientation.z,
+    odom.pose.orientation.w)
+    euler = tf.transformations.euler_from_quaternion(quaternion)
+    return euler[2]
+
+def mover(target_point, curr_point):
+    angle = compute_angle(curr_point,target_point)
+    yaw = get_yaw()
+    # while yaw !=  angle:
+    #     twist = Twist()
+    #     twist.angular.z = 0.18
+    #     pub.publish(twist)
+    #     rate.sleep()
+    #     yaw = get_yaw()
+    #     print(yaw)
 
 
-def mover(target_point, curr_pos=None):
-    if(curr_pos is None):
-        pass
+if __name__=="__main__":
+    rospy.loginfo(get_yaw())
+
+
+
 
 
 
