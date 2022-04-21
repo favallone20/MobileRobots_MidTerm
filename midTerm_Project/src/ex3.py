@@ -9,7 +9,7 @@ import rospy
 from sensor_msgs.msg import LaserScan
 from geometry_msgs.msg import Twist, PoseStamped, Quaternion
 
-rospy.init_node("node_ex2")
+rospy.init_node("node_ex3")
 COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
@@ -65,14 +65,15 @@ def from_laser_to_odom(laser_point):
     # laser point is like [x,y,yaw]
     pose = PoseStamped()
     pose.header.frame_id="base_scan"
-    quaternion = tf.transformation.quaternion_from_euler(0, 0, laser_point[2])
+    quaternion = tf.transformations.quaternion_from_euler(0, 0, laser_point[2])
     pose.pose.position.x = laser_point[0]
     pose.pose.position.y = laser_point[1]
     pose.pose.orientation = Quaternion(*quaternion)
     print("----------------")
     print(pose.pose.position.x,pose.pose.position.y)
     print("----------------")
-
+    
+    print(tf_listener.frameExists("odom"), tf_listener.frameExists("base_scan"))
     if tf_listener.frameExists("/odom") and tf_listener.frameExists("/base_scan"):
         pose_in_odom = tf_listener.transformPose("/odom",pose)
 
