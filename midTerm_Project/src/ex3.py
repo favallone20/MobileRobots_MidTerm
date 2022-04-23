@@ -11,11 +11,12 @@ from sensor_msgs.msg import LaserScan, Imu
 from geometry_msgs.msg import Twist, PoseStamped, Quaternion
 import matplotlib.pyplot as plt 
 
+np.random.seed(1)
 rospy.init_node("node_ex3")
 COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
-STANDARD_DEVIATION = 0.05
+STANDARD_DEVIATION = 0.1
 WORLD_X_DIM = 1.91
 WORLD_Y_DIM = 1.91
 rate = rospy.Rate(100) #0.1s
@@ -133,10 +134,14 @@ if __name__=="__main__":
             input("Press any key...")
         rospy.loginfo(get_imu_yaw())
         rospy.loginfo(estimate_position())
+        
+    last_position = estimate_position()
+    x.append(last_position[0])
+    y.append(last_position[1])
     
     c = np.array(COORDINATES)
-    plt.plot(c[:,0],c[:,1],label="true path")
-    plt.plot(x,y, label = "real path")
+    plt.scatter(c[:,0],c[:,1],label="true path")
+    plt.scatter(x,y, label = "real path")
     plt.legend()
     plt.show()
 

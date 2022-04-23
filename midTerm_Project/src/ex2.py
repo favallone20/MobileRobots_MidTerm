@@ -7,11 +7,12 @@ import rospy
 from geometry_msgs.msg import Twist
 import matplotlib.pyplot as plt
 
+np.random.seed(1)
 rospy.init_node("node_ex2")
 COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
-STANDARD_DEVIATION = 0.05
+STANDARD_DEVIATION = 0.1
 rate = rospy.Rate(100) #0.1s
 pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
 
@@ -110,8 +111,11 @@ if __name__=="__main__":
         rospy.loginfo(get_yaw())
         rospy.loginfo(get_position())
     
+    x.append(target_position[0])
+    y.append(target_position[1])
+    
     c = np.array(COORDINATES)
-    plt.plot(c[:,0],c[:,1],label="true path")
-    plt.plot(x,y, label = "real path")
+    plt.scatter(c[:,0],c[:,1],label="true path")
+    plt.scatter(x,y, label = "real path")
     plt.legend()
     plt.show()
