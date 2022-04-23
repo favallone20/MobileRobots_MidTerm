@@ -1,4 +1,5 @@
 #! /usr/bin/python3
+from re import X
 from matplotlib.contour import QuadContourSet
 import numpy as np
 from math import acos, asin, pi
@@ -6,7 +7,7 @@ from nav_msgs.msg import Odometry
 import tf
 from tf import TransformListener
 import rospy
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, Imu
 from geometry_msgs.msg import Twist, PoseStamped, Quaternion
 
 rospy.init_node("node_ex3")
@@ -14,6 +15,8 @@ COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
 STANDARD_DEVIATION = 0.05
+WORLD_X_DIM = 1.91
+WORLD_Y_DIM = 1.91
 rate = rospy.Rate(100) #0.1s
 pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
 tf_listener = TransformListener()
@@ -44,104 +47,83 @@ def compute_angle(p1,p2):
     
     return angle_to_follow
 
-# def get_position():
-#     odom = rospy.wait_for_message("/odom",Odometry)
-#     # In this code we assume to have the right angle of the robot
-#     x =  odom.pose.pose.position.x
-#     y = odom.pose.pose.position.y
-#     return round(x,2), round(y,2)
+def get_odom_position():
+    odom = rospy.wait_for_message("/odom",Odometry)
+    # In this code we assume to have the right angle of the robot
+    x =  odom.pose.pose.position.x
+    y = odom.pose.pose.position.y
+    return round(x,2), round(y,2)
 
-# def get_yaw():
-#     odom = rospy.wait_for_message("/odom",Odometry)
-#     quaternion = (
-#     odom.pose.pose.orientation.x,
-#     odom.pose.pose.orientation.y,
-#     odom.pose.pose.orientation.z,
-#     odom.pose.pose.orientation.w)
-#     euler = tf.transformations.euler_from_quaternion(quaternion)
-#     return round(euler[2],2)
+def get_odom_yaw():
+    odom = rospy.wait_for_message("/odom",Odometry)
+    quaternion = (
+    odom.pose.pose.orientation.x,
+    odom.pose.pose.orientation.y,
+    odom.pose.pose.orientation.z,
+    odom.pose.pose.orientation.w)
+    euler = tf.transformations.euler_from_quaternion(quaternion)
+    return round(euler[2],2)
 
-def from_laser_to_odom(laser_point):
-    # laser point is like [x,y,yaw]
-    pose = PoseStamped()
-    pose.header.frame_id="base_scan"
-    quaternion = tf.transformations.quaternion_from_euler(0, 0, laser_point[2])
-    pose.pose.position.x = laser_point[0]
-    pose.pose.position.y = laser_point[1]
-    pose.pose.orientation = Quaternion(*quaternion)
-    print("----------------")
-    print(pose.pose.position.x,pose.pose.position.y)
-    print("----------------")
-    
-    print(tf_listener.frameExists("odom"), tf_listener.frameExists("base_scan"))
-    if tf_listener.frameExists("/odom") and tf_listener.frameExists("/base_scan"):
-        pose_in_odom = tf_listener.transformPose("/odom",pose)
+def get_imu_yaw():
+    imu = rospy.wait_for_message("/imu", Imu)
+    quaternion = (
+    imu.orientation.x,
+    imu.orientation.y,
+    imu.orientation.z,
+    imu.orientation.w)
+    euler = tf.transformations.euler_from_quaternion(quaternion)
+    return round(euler[2],2)
 
-    print("----------------")
-    print(pose_in_odom.pose.position.x,pose_in_odom.pose.position.y)
-    print("----------------")
-    return pose_in_odom
 
-    
-    
+def laser_measure():
+    angle = get_imu_yaw()
+    angle = (angle + 2*pi) if angle < 0 else angle
+    angle = int(angle*180/pi)
+    scan = rospy.wait_for_message("/scan",LaserScan)
+    print(angle)
+    x = scan.ranges[360-angle-1]
+    y = scan.ranges[(630-angle-1) % 360]  # 360 + 270, mi porto in zero e poi shift di 270 gradi
+    return x, y
 
 def estimate_position():
-    scan = rospy.wait_for_message("/scan",LaserScan)
+    x, y = laser_measure()
+    x = WORLD_X_DIM - x
+    y = (WORLD_Y_DIM - y) * -1
+    return x, y
 
-    odom_front = from_laser_to_odom([scan.ranges[0],0,0])
-    # odom_left = from_laser_to_odom([0,scan.ranges[90],pi/2])
-    # odom_rear = from_laser_to_odom([scan.ranges[180]*-1,0,pi])
-    # odom_right = from_laser_to_odom([0,scan.ranges[270]*-1,pi/-2])
-
-  
-
-
-
-# def angular_movement(current_point, target_point):
-#     angle = round(compute_angle(current_point,target_point),2)
-#     twist = Twist()
-#     while abs(get_yaw()-angle) > ANGULAR_THRESHOLD:
-#         twist.angular.z = 0.2
-#         pub.publish(twist)
-#         rate.sleep()
-#     twist.angular.z = 0
-#     pub.publish(twist)
+def angular_movement(current_point, target_point):
+    angle = round(compute_angle(current_point,target_point),2)
+    twist = Twist()
+    while abs(get_odom_yaw()-angle) > ANGULAR_THRESHOLD:
+        twist.angular.z = 0.2
+        pub.publish(twist)
+        rate.sleep()
+    twist.angular.z = 0
+    pub.publish(twist)
     
-# def mover(current_point, target_point):
-#     current_point = np.array(current_point)
-#     target_point = np.array(target_point)
-#     position = np.array(get_position())
-#     angular_movement(current_point, target_point)
-#     twist = Twist()
-#     index = np.argmax(np.abs(position-target_point))
-    
-#     while(abs(get_position()[index]-target_point[index])>POSITION_THRESHOLD):
-#         twist.linear.x = 0.1
-#         pub.publish(twist)
-#         rate.sleep()
-#     rospy.loginfo(get_position())
-#     twist.linear.x=0
-#     pub.publish(twist)
-
-
+def mover(current_point, target_point):
+    current_point = np.array(current_point)
+    target_point = np.array(target_point)
+    position = np.array(get_odom_position())
+    angular_movement(current_point, target_point)
+    twist = Twist()
+    index = np.argmax(np.abs(position-target_point))
+    while(abs(get_odom_position()[index]-target_point[index])>POSITION_THRESHOLD):
+        twist.linear.x = 0.1
+        pub.publish(twist)
+        rate.sleep()
+    rospy.loginfo(get_odom_position())
+    twist.linear.x=0
+    pub.publish(twist)
 
 if __name__=="__main__":
-    estimate_position()
-    # target_position = get_position()
-    # for i in range(len(COORDINATES)-1):
-    #     # get initial position
-    #     last_position = target_position
-    #     # compute distance from real points
-    #     dist = np.subtract(COORDINATES[i+1],COORDINATES[i])
-    #     # compute new point from the last position, in first iteration
-    #     # last_position and new_position are COORDINATES[0] e COORDINATES[1]
-    #     new_position = last_position+dist
-    #     # add normal ga
-    #     target_position = [np.random.normal(new_position[0],STANDARD_DEVIATION),np.random.normal(new_position[1],STANDARD_DEVIATION)]
-
-    #     mover(last_position, target_position)
-        
-    #     if i!= len(COORDINATES)-2:
-    #         input("Press any key...")
-    #     rospy.loginfo(get_yaw())
-    #     rospy.loginfo(get_position())
+    for i in range(len(COORDINATES)-1):
+        # get initial position
+        last_position = estimate_position()
+        # add normal gaussian
+        target_position = [np.random.normal(COORDINATES[i+1][0],STANDARD_DEVIATION),np.random.normal(COORDINATES[i+1][1],STANDARD_DEVIATION)]
+        mover(last_position, target_position)
+        if i!= len(COORDINATES)-2:
+            input("Press any key...")
+        rospy.loginfo(get_imu_yaw())
+        rospy.loginfo(estimate_position())
