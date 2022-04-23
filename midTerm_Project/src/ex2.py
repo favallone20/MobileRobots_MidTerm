@@ -5,6 +5,7 @@ from nav_msgs.msg import Odometry
 import tf
 import rospy
 from geometry_msgs.msg import Twist
+import matplotlib.pyplot as plt
 
 rospy.init_node("node_ex2")
 COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
@@ -87,9 +88,13 @@ def mover(current_point, target_point):
 if __name__=="__main__":
     
     target_position = get_position()
+    x = []
+    y = []
     for i in range(len(COORDINATES)-1):
         # get initial position
         last_position = target_position
+        x.append(last_position[0])
+        y.append(last_position[1])
         # compute distance from real points
         dist = np.subtract(COORDINATES[i+1],COORDINATES[i])
         # compute new point from the last position, in first iteration
@@ -104,3 +109,9 @@ if __name__=="__main__":
             input("Press any key...")
         rospy.loginfo(get_yaw())
         rospy.loginfo(get_position())
+    
+    c = np.array(COORDINATES)
+    plt.plot(c[:,0],c[:,1],label="true path")
+    plt.plot(x,y, label = "real path")
+    plt.legend()
+    plt.show()

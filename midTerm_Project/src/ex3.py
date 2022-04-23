@@ -9,6 +9,7 @@ from tf import TransformListener
 import rospy
 from sensor_msgs.msg import LaserScan, Imu
 from geometry_msgs.msg import Twist, PoseStamped, Quaternion
+import matplotlib.pyplot as plt 
 
 rospy.init_node("node_ex3")
 COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
@@ -117,9 +118,14 @@ def mover(current_point, target_point):
     pub.publish(twist)
 
 if __name__=="__main__":
+    x = []
+    y = []
+    
     for i in range(len(COORDINATES)-1):
         # get initial position
         last_position = estimate_position()
+        x.append(last_position[0])
+        y.append(last_position[1])
         # add normal gaussian
         target_position = [np.random.normal(COORDINATES[i+1][0],STANDARD_DEVIATION),np.random.normal(COORDINATES[i+1][1],STANDARD_DEVIATION)]
         mover(last_position, target_position)
@@ -127,3 +133,11 @@ if __name__=="__main__":
             input("Press any key...")
         rospy.loginfo(get_imu_yaw())
         rospy.loginfo(estimate_position())
+    
+    c = np.array(COORDINATES)
+    plt.plot(c[:,0],c[:,1],label="true path")
+    plt.plot(x,y, label = "real path")
+    plt.legend()
+    plt.show()
+
+
