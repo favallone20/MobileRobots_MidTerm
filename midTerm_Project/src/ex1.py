@@ -5,12 +5,14 @@ from nav_msgs.msg import Odometry
 import tf
 import rospy
 from geometry_msgs.msg import Twist
+from rosgraph_msgs.msg import Clock
 
 rospy.init_node("node_ex1")
 COORDINATES = [(0,0), (0.26,0), (0.26,0.26), (0,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
-rate = rospy.Rate(100) #0.1s
+current_angle = 0
+rate = rospy.Rate(100) #0.01s
 pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
 
 
@@ -35,8 +37,8 @@ def compute_angle(p1,p2):
         (angle_2 >= pi/-2 and angle_2 < 0):
         angle_to_follow = 2*pi + angle_2
     
-    if angle_to_follow > pi:
-        angle_to_follow = angle_to_follow-2*pi
+    # if angle_to_follow > pi:
+    #     angle_to_follow = angle_to_follow-2*pi
     
     return angle_to_follow
 
@@ -57,29 +59,41 @@ def get_yaw():
     euler = tf.transformations.euler_from_quaternion(quaternion)
     return round(euler[2],2)
 
+def get_time():
+    clock = rospy.wait_for_message("/clock", Clock)
+    time = clock.clock.secs + clock.clock.nsecs * 10**-9
+    return time
+
 def angular_movement(current_point, target_point):
-    angle = round(compute_angle(current_point,target_point),2)
+    global current_angle
+    angle = abs(current_angle - round(compute_angle(current_point,target_point),2))
+    movement_time = angle/0.2
     twist = Twist()
-    while abs(get_yaw()-angle) > ANGULAR_THRESHOLD:
-        twist.angular.z = 0.2
+    twist.angular.z = 0.2
+    start_time = get_time()
+    pub.publish(twist)
+    while (get_time() - start_time < movement_time):
         pub.publish(twist)
         rate.sleep()
     twist.angular.z = 0
     pub.publish(twist)
+    current_angle = angle
+
     
 def mover(current_point, target_point):
     current_point = np.array(current_point)
     target_point = np.array(target_point)
-    position = np.array(get_position())
     angular_movement(current_point, target_point)
+    distance_vector = np.subtract(target_point, current_point)
+    distance = np.linalg.norm(distance_vector)
+    movement_time = distance/0.1
     twist = Twist()
-    index = np.argmax(np.abs(position-target_point))
-    
-    while(abs(get_position()[index]-target_point[index])>POSITION_THRESHOLD):
-        twist.linear.x = 0.1
+    twist.linear.x = 0.1
+    start_time = get_time()
+    pub.publish(twist)
+    while (get_time() - start_time < movement_time):
         pub.publish(twist)
-        rate.sleep()
-    rospy.loginfo(get_position())
+        rate.sleep()    
     twist.linear.x=0
     pub.publish(twist)
 
