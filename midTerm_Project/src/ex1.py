@@ -37,9 +37,6 @@ def compute_angle(p1,p2):
         (angle_2 >= pi/-2 and angle_2 < 0):
         angle_to_follow = 2*pi + angle_2
     
-    # if angle_to_follow > pi:
-    #     angle_to_follow = angle_to_follow-2*pi
-    
     return angle_to_follow
 
 def get_position():

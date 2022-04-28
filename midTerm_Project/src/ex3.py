@@ -1,6 +1,5 @@
 #! /usr/bin/python3
 from re import X
-from matplotlib.contour import QuadContourSet
 import numpy as np
 from math import acos, asin, pi
 from nav_msgs.msg import Odometry
@@ -8,7 +7,8 @@ import tf
 from tf import TransformListener
 import rospy
 from sensor_msgs.msg import LaserScan, Imu
-from geometry_msgs.msg import Twist, PoseStamped, Quaternion
+from geometry_msgs.msg import Twist
+from rosgraph_msgs.msg import Clock
 import matplotlib.pyplot as plt 
 
 np.random.seed(1)
@@ -17,8 +17,10 @@ COORDINATES = [(0,0), (0.7,0), (1,0.0), (1.5,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
 STANDARD_DEVIATION = 0.1
+STANDARD_DEVIATION_MEASURE = 0.02
 WORLD_X_DIM = 1.91
 WORLD_Y_DIM = 1.91
+current_angle = 0
 rate = rospy.Rate(100) #0.1s
 pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
 tf_listener = TransformListener()
@@ -43,9 +45,6 @@ def compute_angle(p1,p2):
     elif (angle_1 > 0 and angle_1 <= pi/2) and \
         (angle_2 >= pi/-2 and angle_2 < 0):
         angle_to_follow = 2*pi + angle_2
-    
-    if angle_to_follow > pi:
-        angle_to_follow = angle_to_follow-2*pi
     
     return angle_to_follow
 
@@ -82,9 +81,8 @@ def laser_measure():
     angle = (angle + 2*pi) if angle < 0 else angle
     angle = int(angle*180/pi)
     scan = rospy.wait_for_message("/scan",LaserScan)
-    print(angle)
-    x = scan.ranges[360-angle-1]
-    y = scan.ranges[(630-angle-1) % 360]  # 360 + 270, mi porto in zero e poi shift di 270 gradi
+    x = scan.ranges[360-angle-1] # + np.random.normal(0, STANDARD_DEVIATION_MEASURE)
+    y = scan.ranges[(630-angle-1) % 360] # + np.random.normal(0, STANDARD_DEVIATION_MEASURE) # 360 + 270, mi porto in zero e poi shift di 270 gradi
     return x, y
 
 def estimate_position():
@@ -93,28 +91,41 @@ def estimate_position():
     y = (WORLD_Y_DIM - y) * -1
     return x, y
 
+def get_time():
+    clock = rospy.wait_for_message("/clock", Clock)
+    time = clock.clock.secs + clock.clock.nsecs * 10**-9
+    return time
+
 def angular_movement(current_point, target_point):
-    angle = round(compute_angle(current_point,target_point),2)
+    global current_angle
+    angle = abs(current_angle - round(compute_angle(current_point,target_point),2))
+    movement_time = angle/0.2
     twist = Twist()
-    while abs(get_odom_yaw()-angle) > ANGULAR_THRESHOLD:
-        twist.angular.z = 0.2
+    twist.angular.z = 0.2
+    start_time = get_time()
+    pub.publish(twist)
+    while (get_time() - start_time < movement_time):
         pub.publish(twist)
         rate.sleep()
     twist.angular.z = 0
     pub.publish(twist)
+    current_angle = angle
+
     
 def mover(current_point, target_point):
     current_point = np.array(current_point)
     target_point = np.array(target_point)
-    position = np.array(get_odom_position())
     angular_movement(current_point, target_point)
+    distance_vector = np.subtract(target_point, current_point)
+    distance = np.linalg.norm(distance_vector)
+    movement_time = distance/0.1
     twist = Twist()
-    index = np.argmax(np.abs(position-target_point))
-    while(abs(get_odom_position()[index]-target_point[index])>POSITION_THRESHOLD):
-        twist.linear.x = 0.1
+    twist.linear.x = 0.1
+    start_time = get_time()
+    pub.publish(twist)
+    while (get_time() - start_time < movement_time):
         pub.publish(twist)
-        rate.sleep()
-    rospy.loginfo(get_odom_position())
+        rate.sleep()    
     twist.linear.x=0
     pub.publish(twist)
 
