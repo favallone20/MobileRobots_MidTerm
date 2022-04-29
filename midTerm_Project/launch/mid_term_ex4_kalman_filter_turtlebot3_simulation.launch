@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="node_start_delay" default="5.0" />
+
+    <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_stage_1.launch" />
+
+    <node pkg="midTerm_Project" type="ex4_kalman_filter.py" name="node_ex4_kalman_filter" output="screen" 
+        launch-prefix="bash -c 'sleep $(arg node_start_delay); $0 $@'" />
+
+</launch>
