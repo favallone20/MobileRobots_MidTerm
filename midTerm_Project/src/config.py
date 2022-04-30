@@ -1,4 +1,4 @@
-COORDINATES = [(0,0), (1,0), (1,-1), (0,0)]  #landmarks coordinates
+COORDINATES = [(0,0), (1,0), (1,1), (0,0)]  #landmarks coordinates
 STANDARD_DEVIATION = 0.2
 STANDARD_DEVIATION_ODOM = 0.0001
 STANDARD_DEVIATION_MEASURE = 0.01 

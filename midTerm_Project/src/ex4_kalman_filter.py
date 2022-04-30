@@ -161,6 +161,8 @@ if __name__=="__main__":
     
 
     last_position = np.array([[0, 0]])
+    x.append(last_position[0][0])
+    y.append(last_position[0][1])
     xk_ = last_position 
     for i in range(len(COORDINATES)-1):
         target_position = [np.random.normal(COORDINATES[i+1][0],STANDARD_DEVIATION),np.random.normal(COORDINATES[i+1][1],STANDARD_DEVIATION)]
