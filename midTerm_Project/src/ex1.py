@@ -16,6 +16,7 @@ pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
 
 
 def compute_angle(p1,p2):
+    ''''Computes angle between two vectors (angle in range [0, 2*pi])'''
     
     v_dist = np.subtract(p2,p1)
     v_norm = np.linalg.norm(v_dist)
@@ -50,6 +51,8 @@ def get_imu_yaw():
     return round(euler[2],2)
 
 def get_time():
+    '''Gets gazebo simulation time'''
+
     clock = rospy.wait_for_message("/clock", Clock)
     time = clock.clock.secs + clock.clock.nsecs * 10**-9
     return time
@@ -84,6 +87,8 @@ def angular_movement(current_point, target_point):
 
     
 def mover(current_point, target_point):
+    '''Moves robot from current point to target point'''
+
     current_point = np.array(current_point)
     target_point = np.array(target_point)
     angular_movement(current_point, target_point)
@@ -113,6 +118,7 @@ if __name__=="__main__":
         if i!= len(COORDINATES)-2:
             input("Press any key...")
     
+    # plots
     fig, ax = plt.subplots()
     x.append(COORDINATES[i][0])
     y.append(COORDINATES[i][1])

@@ -12,11 +12,12 @@ from utils_turtlebot3 import *
 
 np.random.seed(1)
 rospy.init_node("node_ex2")
-rate = rospy.Rate(100) #0.1s
+rate = rospy.Rate(100) #0.01s
 pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
 
 
 def compute_angle(p1,p2):
+    ''''Computes angle between two vectors (angle in range [0, 2*pi])'''
     
     v_dist = np.subtract(p2,p1)
     v_norm = np.linalg.norm(v_dist)
@@ -51,6 +52,8 @@ def get_imu_yaw():
     return round(euler[2],2)
 
 def get_time():
+    '''Gets gazebo simulation time'''
+
     clock = rospy.wait_for_message("/clock", Clock)
     time = clock.clock.secs + clock.clock.nsecs * 10**-9
     return time
@@ -85,6 +88,8 @@ def angular_movement(current_point, target_point):
 
     
 def mover(current_point, target_point):
+    '''Moves robot from current point to target point'''
+
     current_point = np.array(current_point)
     target_point = np.array(target_point)
     angular_movement(current_point, target_point)
@@ -116,7 +121,7 @@ if __name__=="__main__":
         # compute new point from the last position, in first iteration
         # last_position and new_position are COORDINATES[0] e COORDINATES[1]
         new_position = last_position+dist
-        # add normal ga
+        # add normal gaussian noise to simulate movement error in the real world   
         target_position = [np.random.normal(new_position[0],STANDARD_DEVIATION),np.random.normal(new_position[1],STANDARD_DEVIATION)]
 
         mover(last_position, target_position)
@@ -127,6 +132,7 @@ if __name__=="__main__":
     x.append(target_position[0])
     y.append(target_position[1])
     
+    # plot 
     fig, ax = plt.subplots()
     plot(np.array(x),np.array(y),ax, "REAL PATH")
     
