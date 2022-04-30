@@ -8,6 +8,7 @@ from geometry_msgs.msg import Twist
 from rosgraph_msgs.msg import Clock
 import matplotlib.pyplot as plt
 from config import * 
+from utils import *
 
 np.random.seed(1) #Set a fixed seed for all the exercises
 rospy.init_node("node_ex4_kalman_filter")
@@ -176,8 +177,9 @@ if __name__=="__main__":
             input("Press any key...")
 
     
+    fig, ax = plt.subplots()
+    plot(np.array(x),np.array(y),ax, "REAL PATH")
     c = np.array(COORDINATES)
-    plt.scatter(c[:,0],c[:,1],label="true path")
-    plt.scatter(x,y, label = "real path")
+    plot(c[:,0],c[:,1],ax,"GROUND TRUTH")
     plt.legend()
     plt.show()
