@@ -1,8 +1,6 @@
 #! /usr/bin/python3
-from re import X
 import numpy as np
 from math import acos, asin, pi
-from nav_msgs.msg import Odometry
 import tf
 import rospy
 from sensor_msgs.msg import LaserScan, Imu
@@ -12,13 +10,14 @@ import matplotlib.pyplot as plt
 from config import *
 from utils_turtlebot3 import *
 
-np.random.seed(1)
+np.random.seed(1) #seed initialization for repetible experiments
 rospy.init_node("node_ex3")
-rate = rospy.Rate(100) #0.1s
+rate = rospy.Rate(100) #0.01s
 pub = rospy.Publisher("/cmd_vel",Twist,queue_size=1)
 
 def compute_angle(p1,p2):
-    
+    '''Computes angle between two vectors (angle in range [0, 2*pi])'''
+
     v_dist = np.subtract(p2,p1)
     v_norm = np.linalg.norm(v_dist)
  
@@ -57,17 +56,21 @@ def laser_measure():
     angle = (angle + 2*pi) if angle < 0 else angle
     angle = int(angle*180/pi)
     scan = rospy.wait_for_message("/scan",LaserScan)
-    x = scan.ranges[360-angle-1] + np.random.normal(0, STANDARD_DEVIATION_MEASURE)
-    y = scan.ranges[(630-angle-1) % 360] + np.random.normal(0, STANDARD_DEVIATION_MEASURE)
+    x = scan.ranges[360-angle-1] + np.random.normal(0, STANDARD_DEVIATION_MEASURE) #adds noise defined as gaussian with mean 0 and given standard deviation
+    y = scan.ranges[(630-angle-1) % 360] + np.random.normal(0, STANDARD_DEVIATION_MEASURE) #
     return x, y
 
 def estimate_position():
+    '''Estimates robot position in known wnvirment'''
+    
     x, y = laser_measure()
     x = WORLD_X_DIM - x
     y = (WORLD_Y_DIM - y) * -1
     return x, y
 
 def get_time():
+    '''Gets Gazebo simulation time'''
+
     clock = rospy.wait_for_message("/clock", Clock)
     time = clock.clock.secs + clock.clock.nsecs * 10**-9
     return time
@@ -102,6 +105,8 @@ def angular_movement(current_point, target_point):
 
     
 def mover(current_point, target_point):
+    '''Moves the robot from current_point to target_point'''
+    
     current_point = np.array(current_point)
     target_point = np.array(target_point)
     angular_movement(current_point, target_point)
@@ -121,13 +126,13 @@ def mover(current_point, target_point):
 if __name__=="__main__":
     x = []
     y = []
-    
+     
     for i in range(len(COORDINATES)-1):
-        # get initial position
+        # the robot estimates his current position before starting its movement
         last_position = estimate_position()
         x.append(last_position[0])
         y.append(last_position[1])
-        # add normal gaussian
+        # add normal gaussian noise to simulate movement error in the real world
         target_position = [np.random.normal(COORDINATES[i+1][0],STANDARD_DEVIATION),np.random.normal(COORDINATES[i+1][1],STANDARD_DEVIATION)]
         mover(last_position, target_position)
         if i!= len(COORDINATES)-2:
@@ -137,6 +142,7 @@ if __name__=="__main__":
     x.append(last_position[0])
     y.append(last_position[1])
     
+    #plot reak path and ground_truth path
     fig, ax = plt.subplots()
     plot(np.array(x),np.array(y),ax, "REAL PATH")
     c = np.array(COORDINATES)
