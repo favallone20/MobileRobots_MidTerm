@@ -8,7 +8,7 @@ from geometry_msgs.msg import Twist
 from rosgraph_msgs.msg import Clock
 import matplotlib.pyplot as plt
 from config import * 
-from utils import *
+from utils_turtlebot3 import *
 
 np.random.seed(1) #Set a fixed seed for all the exercises
 rospy.init_node("node_ex4_kalman_filter")

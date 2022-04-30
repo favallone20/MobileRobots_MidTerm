@@ -8,7 +8,7 @@ from rosgraph_msgs.msg import Clock
 from sensor_msgs.msg import Imu
 import matplotlib.pyplot as plt
 from config import * 
-from utils import *
+from utils_turtlebot3 import *
 
 np.random.seed(1)
 rospy.init_node("node_ex2")
