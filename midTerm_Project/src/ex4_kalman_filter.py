@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 
 np.random.seed(1)
 rospy.init_node("node_ex4_kalman_filter")
-COORDINATES = [(0,0), (0.5,0), (0.5,0.5), (0,0)]  #landmarks coordinates
+COORDINATES = [(0,0), (0.5,0), (0.5,-0.5), (0,0)]  #landmarks coordinates
 ANGULAR_THRESHOLD = 0.001
 POSITION_THRESHOLD = 0.01
 STANDARD_DEVIATION = 0.0001
@@ -43,7 +43,7 @@ def compute_angle(p1,p2):
         angle_to_follow = angle_1
     elif (angle_1 > pi/2 and angle_1 < pi) and \
         (angle_2 > pi/-2 and angle_2 < 0):
-        angle_to_follow = pi/2*3 + angle_2
+        angle_to_follow = pi + abs(angle_2)
     elif (angle_1 > 0 and angle_1 <= pi/2) and \
         (angle_2 >= pi/-2 and angle_2 < 0):
         angle_to_follow = 2*pi + angle_2
@@ -100,7 +100,11 @@ def get_time():
 
 def angular_movement(current_point, target_point):
     global current_angle
-    angle = abs(current_angle - round(compute_angle(current_point,target_point),2))
+    angle_to_go = round(compute_angle(current_point,target_point),2)
+    angle_to_go = angle_to_go if angle_to_go > current_angle else angle_to_go + 2*pi
+    angle = abs(current_angle - angle_to_go)
+    print("Current:" , current_point, "Target:", target_point)
+    print("Angle to go:", angle_to_go, "Angle:", angle)
     movement_time = angle/ANGULAR_SPEED
     twist = Twist()
     twist.angular.z = ANGULAR_SPEED
@@ -111,7 +115,7 @@ def angular_movement(current_point, target_point):
         rate.sleep()
     twist.angular.z = 0
     pub.publish(twist)
-    current_angle = angle
+    current_angle = angle_to_go % (2*pi)
 
     
 def mover(current_point, target_point):
