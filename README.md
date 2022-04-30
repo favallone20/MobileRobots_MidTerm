@@ -1,6 +1,27 @@
 # Mobile Robots Exam
 ## Contributing to the development
 
+### How to start the simulations
+In the folder launch you can see the launch files for running the simulation foreach exercise.
+
+```bash 
+roslaunch midTerm_Project mid_term_ex1_turtlebot3_simulation.launch 
+```
+
+
+```bash 
+roslaunch midTerm_Project mid_term_ex2_turtlebot3_simulation.launch 
+```
+
+
+```bash 
+roslaunch midTerm_Project mid_term_ex3_turtlebot3_simulation.launch 
+```
+
+
+```bash 
+roslaunch midTerm_Project mid_term_ex4_kalman_filter_turtlebot3_simulation.launch
+```
 ### How to commit
 
 Commits should be **small** and related to a specific set of changes that are **semantically related to each other**. Although unofficial branches allow for any committing style, short commits are beneficial to keep the repo clean and tidy. If you need to go back to a previous commit or making a-posteriori analyses of your code, finer granularity helps.

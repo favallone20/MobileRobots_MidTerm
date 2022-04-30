@@ -130,6 +130,8 @@ if __name__=="__main__":
     for i in range(len(COORDINATES)-1):
         # the robot estimates his current position before starting its movement
         last_position = estimate_position()
+        if i ==0: 
+            last_position = COORDINATES[0]
         x.append(last_position[0])
         y.append(last_position[1])
         # add normal gaussian noise to simulate movement error in the real world
