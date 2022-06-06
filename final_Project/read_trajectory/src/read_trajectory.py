@@ -90,8 +90,6 @@ if __name__=="__main__":
         client.send_goal(goal)
         wait = client.wait_for_result()
 
-        time.sleep(1)
-
 
     client.send_goal(end)
     wait = client.wait_for_result()
