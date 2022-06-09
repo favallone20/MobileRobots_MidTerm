@@ -105,7 +105,7 @@ if __name__=="__main__":
     start.target_pose.pose.orientation.w = 1
 
     end_x = float(rows[1][0].split()[0])
-    end_y = float(rows[1][0].split()[0])
+    end_y = float(rows[1][0].split()[1])
 
     end = MoveBaseGoal()
     end.target_pose.header.frame_id="map"

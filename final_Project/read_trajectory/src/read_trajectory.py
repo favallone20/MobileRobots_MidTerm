@@ -78,7 +78,6 @@ if __name__=="__main__":
     client.send_goal(start)
     wait = client.wait_for_result()
     print("raggiunto")
-    time.sleep(1)
 
     for i in range(2, len(rows)):
         goal = MoveBaseGoal()
@@ -89,7 +88,7 @@ if __name__=="__main__":
         goal.target_pose.pose.orientation.w = 1
         client.send_goal(goal)
         wait = client.wait_for_result()
-
+        time.sleep(0.1)
 
     client.send_goal(end)
     wait = client.wait_for_result()
