@@ -20,6 +20,7 @@ n_reached = 0
 def compute_angle(start_point,end_point):
     v_diff = subtract(end_point,start_point)
     # v_norm = norm(v_diff)
+    v_diff[0] += 0.00001
     orientation = atan2(v_diff[1],v_diff[0])
     return orientation
 
@@ -125,12 +126,13 @@ if __name__=="__main__":
         goal_x = float(rows[i][0].split()[0])
         goal_y = float(rows[i][0].split()[1])
 
-        quaternion = [0,0,0,1]
-      
         if i < (len(rows)-1):
             next_goal_x = float(rows[i+1][0].split()[0])
             next_goal_y = float(rows[i+1][0].split()[1])
             yaw = compute_angle([goal_x,goal_y],[next_goal_x,next_goal_y])
+            quaternion = tf.transformations.quaternion_from_euler(0, 0, yaw)
+        else:
+            yaw = compute_angle([goal_x,goal_y],[end_x,end_y])
             quaternion = tf.transformations.quaternion_from_euler(0, 0, yaw)
         goal.target_pose.header.frame_id = "map"
         goal.target_pose.header.stamp = rospy.Time.now()
