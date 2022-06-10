@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<launch>
-    <rosparam file="$(find read_trajectory)/config/read_trajectory_config.yaml" />
-    <node pkg="read_trajectory" type="read_trajectory2.py" name="read_trajectory" output="screen">
-    </node>
-</launch>
